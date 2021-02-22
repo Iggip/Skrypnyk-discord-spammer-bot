@@ -6,7 +6,7 @@ git clone https://github.com/CoderBogdasha/Skrypnyk-discord-spamer-bot/
 
 cd Skrypnyk-discord-spamer-bot/
 
-pip install requests
+pip install -r requirements.txt
 
 python bot.py
 
