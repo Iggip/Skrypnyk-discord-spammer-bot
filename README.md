@@ -39,3 +39,7 @@ bot_activity - this is the text that will be displayed as a status (Playing ####
 prefix - this is discord command prefix
 
 way - is the path to the file where the settings will be saved(example: SAS.SAS)
+
+# HOW TO USE THIS BOT?
+
+You can use a bot данdick https://discord.com/oauth2/authorize?client_id=804681049975947294&scope=bot
