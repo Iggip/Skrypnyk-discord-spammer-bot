@@ -2,61 +2,82 @@ import discord
 from discord.ext import commands
 import time
 import config
+import pickle
 
-flood = False
-flood_photo = False
+
+try:
+    data = pickle.load(open(config.way, "rb"))
+except FileNotFoundError:
+    pickle.dump({}, open(config.way, "wb"))
+    data = {}
+
+
 client = commands.Bot(command_prefix=config.prefix)
 
 
 # Spam
 @client.command(name='spam')
-async def answer(ctx, context1, context2):
-    global flood
-    context = ''
+async def answer(ctx, context1, *args):
+    global data
+    data = pickle.load(open(config.way, "rb"))
+    try:
+        if not data[ctx.message.channel.id]:
+            data[ctx.message.channel.id] = {'flood': False}
+    except KeyError:
+        data[ctx.message.channel.id] = {'flood': False}
     text = ''
-    text1 = ''
-    if not flood:
-        flood = True
+    context = ''
+    if not data[ctx.message.channel.id]['flood'] and context1 != 'stop':
+        data[ctx.message.channel.id]['flood'] = True
+    if ctx.message.attachments and not args:
+        context = ctx.message.attachments[0].url
+        args = [1]
     else:
-        flood = False
-    for x in range(0, len(context2)):
-        if context2[x] == '/':
-            context = context + ' '
+        for x in args:
+            context += x + ' '
+    try:
+        if args[0] == '^long':
+            context = context[5:len(context)]
+            r = 0
+            while len(text) < 2000 and r < int(context1):
+                text += context + '\n'
+                r += 1
+            if int(context1) != 0:
+                if r < int(context1):
+                    for b in range(0, int(int(context1)/r)):
+                        await ctx.send(text)
+                        time.sleep(0.8)
+                    text1 = ''
+                    for a in range(0, int(context1)-r*int(int(context1)/r)):
+                        text1 += context + '\n'
+                    await ctx.send(text1)
+                else:
+                    await ctx.send(text)
+                data[ctx.message.channel.id]['flood'] = False
+            if int(context1) == 0:
+                while data[ctx.message.channel.id]['flood']:
+                    await ctx.send(text)
+                    time.sleep(0.8)
         else:
-            context = context + context2[x]
-    for v in range(0, int(1000/len(context))):
-        text = text + context + '\n'
-    if int(context1) > 0:
-        if int(context1) > int(1000 / (len(context))):
-            for e in range(0, int(int(context1)/(int(1000 / (len(context)))))):
-                await ctx.send(text)
-                time.sleep(0.8)
-        else:
-            for v in range(0, int(context1)):
-                text1 = text1 + context + '\n'
-            await ctx.send(text1)
-    if int(context1) == 0:
-        while flood:
-            await ctx.send(text)
-            time.sleep(0.8)
-
-
-# Spam_Photo
-@client.command(name='spam_photo')
-async def answer(ctx, context1, context2):
-    global flood_photo
-    if not flood_photo:
-        flood_photo = True
-    else:
-        flood_photo = False
-    if int(context1) > 0:
-        for x in range(0, int(context1)):
-            await ctx.send(context2)
-            time.sleep(0.8)
-    elif int(context1) == 0:
-        while flood_photo:
-            await ctx.send(context2)
-            time.sleep(0.8)
+            if int(context1) > 0:
+                e = 0
+                while e < int(context1) and data[ctx.message.channel.id]['flood']:
+                    await ctx.send(context)
+                    time.sleep(0.8)
+                    e += 1
+                data[ctx.message.channel.id]['flood'] = False
+            if int(context1) == 0:
+                while data[ctx.message.channel.id]['flood']:
+                    await ctx.send(context)
+                    time.sleep(0.8)
+    except IndexError:
+        if data[ctx.message.channel.id]['flood']:
+            data[ctx.message.channel.id]['flood'] = False
+            if context1 == 'stop':
+                await ctx.send('stopped')
+                while data[ctx.message.channel.id]['flood']:
+                    await ctx.send('stopped')
+    pickle.dump(data, open(config.way, "wb"))
 
 
 # Discord Activity
